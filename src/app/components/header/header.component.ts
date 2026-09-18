@@ -17,9 +17,6 @@ import { AuthModalComponent } from '../auth-modal/auth-modal.component';
     <div class="bg-slate-950 text-slate-300 text-xs py-2 px-3 sm:px-6 border-b border-slate-800">
       <div class="w-full max-w-[1440px] mx-auto flex flex-wrap justify-between items-center gap-2">
         <div class="flex items-center gap-2 sm:gap-3">
-          <span class="bg-emerald-500/20 text-emerald-400 font-extrabold px-2 py-0.5 rounded text-[10px] sm:text-[11px] border border-emerald-500/30 whitespace-nowrap">
-            <i class="fa-solid fa-bolt mr-1"></i> IZIVILLA DIRECT
-          </span>
           <span class="font-extrabold text-white text-[10px] sm:text-[11px] tracking-wide truncate">
             « Zéro intermédiaire inutile. »
           </span>
