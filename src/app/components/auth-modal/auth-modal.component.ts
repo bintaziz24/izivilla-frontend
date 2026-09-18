@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from '@angu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
+import { CountryService } from '../../services/country.service';
 
 @Component({
   selector: 'app-auth-modal',
@@ -20,16 +21,20 @@ export class AuthModalComponent implements OnInit, OnDestroy {
 
   mode: 'login' | 'register' | 'verify' = 'register';
 
-  // Register Form Data
+  // Register Form Data (Izivilla Style)
   name = '';
   email = '';
   password = '';
+  phonePrefix = '+221';
   phone = '';
-  role: 'user' | 'owner' | 'agency' = 'user';
+  role: 'tenant' | 'owner' | 'agency' = 'tenant';
+  showRegisterPassword = false;
 
   // Login Form Data
+  loginType: 'tenant' | 'owner' | 'agency' = 'tenant';
   loginEmail = '';
   loginPassword = '';
+  showLoginPassword = false;
 
   // OTP Verification Data
   otpDigits: string[] = ['', '', '', '', '', ''];
@@ -45,7 +50,10 @@ export class AuthModalComponent implements OnInit, OnDestroy {
   resendCountdown = 0;
   private timerInterval: any = null;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    public countryService: CountryService
+  ) {}
 
   ngOnInit(): void {
     this.mode = this.initialMode;
@@ -74,7 +82,7 @@ export class AuthModalComponent implements OnInit, OnDestroy {
   // --- INSCRIPTION ---
   onRegisterSubmit(): void {
     if (!this.name || !this.email || !this.password) {
-      this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
+      this.errorMessage = 'Veuillez remplir tous les champs obligatoires (*).';
       return;
     }
 
@@ -87,18 +95,20 @@ export class AuthModalComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.successMessage = '';
 
+    const fullPhone = `${this.phonePrefix} ${this.phone}`.trim();
+
     this.authService.register({
       name: this.name,
       email: this.email,
       password: this.password,
-      phone: this.phone,
+      phone: fullPhone,
       role: this.role
     }).subscribe({
       next: (res) => {
         this.isLoading = false;
         this.pendingEmail = this.email;
         this.debugCode = res.code_debug || null;
-        this.successMessage = res.message || 'Inscription réussie ! Veuillez saisir le code reçu par email.';
+        this.successMessage = res.message || 'Un code de vérification à 6 chiffres a été envoyé par email.';
         this.startResendTimer(60);
         this.mode = 'verify';
       },
@@ -114,7 +124,6 @@ export class AuthModalComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     const value = input.value;
 
-    // Coller un code complet
     if (value.length > 1) {
       const cleanDigits = value.replace(/\D/g, '').slice(0, 6).split('');
       for (let i = 0; i < 6; i++) {
@@ -174,7 +183,7 @@ export class AuthModalComponent implements OnInit, OnDestroy {
     this.authService.verifyCode(this.pendingEmail, code).subscribe({
       next: (res) => {
         this.isLoading = false;
-        this.successMessage = 'Compte vérifié avec succès !';
+        this.successMessage = 'Votre compte a été vérifié avec succès !';
         if (res.user) {
           this.authenticated.emit(res.user);
           setTimeout(() => {
@@ -246,7 +255,6 @@ export class AuthModalComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- COMPTE À REBOURS ---
   private startResendTimer(seconds: number): void {
     this.stopTimer();
     this.resendCountdown = seconds;
